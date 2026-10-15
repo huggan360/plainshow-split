@@ -45,6 +45,7 @@ ME=$(id -un)
 sudo -n chown -R "$ME:plainshow-split" "$RELEASE"
 sudo -n chmod -R g+rX,o-rwx "$RELEASE"
 sudo -n setfacl -R -m u:www-data:rX "$RELEASE"
+sudo -n setfacl -m u:plainshow-split:x /srv/plainshow
 sudo -n setfacl -m u:www-data:x "$BASE" "$BASE/releases"
 sudo -n find "$BASE/shared/storage" -type d -exec chmod 2770 {} +
 sudo -n find "$BASE/shared/storage" -type f -exec chmod 0660 {} +
