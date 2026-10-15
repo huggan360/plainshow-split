@@ -1,0 +1,15 @@
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# API: every /api/v1/... request goes to one entry point.
+RewriteRule ^api/v1(/.*)?$ api/v1/index.php [L,QSA]
+
+# Pages without .php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+<Files ".htaccess">
+    Require all denied
+</Files>

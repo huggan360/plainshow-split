@@ -1,0 +1,9 @@
+/vendor/
+/public/ui/
+/config/plainshow.php
+/config/database.php
+/storage/sessions/*
+/storage/cache/*
+!/storage/sessions/.gitkeep
+!/storage/cache/.gitkeep
+/config/notify.php

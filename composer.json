@@ -1,0 +1,26 @@
+{
+    "name": "plainshow/split",
+    "description": "PlainShow Split: share costs in groups and settle up with Swish.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3",
+        "plainshow/kit": "^0.3"
+    },
+    "autoload": {
+        "psr-4": { "Split\\": "app/src/" },
+        "files": ["app/helpers.php"]
+    },
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/huggan360/plainshow-kit.git", "no-api": true }
+    ],
+    "config": {
+        "preferred-install": { "plainshow/*": "source", "*": "dist" },
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-install-cmd": ["@php app/console.php publish-ui"],
+        "post-update-cmd": ["@php app/console.php publish-ui"],
+        "check-type": "check-type public/assets/split"
+    }
+}

@@ -1,0 +1,9 @@
+# Changelog
+
+## 1.0.0
+
+- Split moves out of the blog into its own PlainShow extension, with its own database.
+- Amounts in whole öre, equal, amount and percent splits, the fewest settling payments with Swish links, payment history and an activity log.
+- Only group members see a group. The creator renames, removes people and deletes; expenses are changed by whoever added or paid them.
+- Nobody can leave or be removed while they owe or are owed money.
+- CSRF on every change, prepared statements throughout, sessions on Split's own cookie.

@@ -1,0 +1,15 @@
+{
+    "id": "split",
+    "name": "Split",
+    "description": "Share costs in groups and settle up with Swish.",
+    "icon": "bx-wallet",
+    "version": "1.0.0",
+    "url": "https://split.plainshow.se",
+    "api": "https://split.plainshow.se/api/v1",
+    "health": "https://split.plainshow.se/api/v1/health",
+    "update": {
+        "repository": "https://github.com/huggan360/plainshow-split.git",
+        "shared": ["config/plainshow.php", "config/database.php", "storage"],
+        "steps": ["composer install --no-dev --optimize-autoloader --no-interaction", "php app/console.php migrate"]
+    }
+}
