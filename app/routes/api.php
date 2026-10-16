@@ -104,3 +104,33 @@ $router->add('DELETE', '/groups/{id}/payments/{payment}', function (Request $req
 });
 
 $router->add('GET', '/people', fn () => ['people' => array_map(fn ($p) => ['id' => $p['id'], 'name' => $p['name'], 'initials' => $p['initials'], 'avatar' => $p['avatar']], People::directory())]);
+
+// The PlainShow dashboard widget, asked for by core with a signed request.
+$router->add('GET', '/widgets/balances', function () {
+    $file = dirname(__DIR__, 2) . '/config/widgets.php';
+    try {
+        $userId = PlainShow\Kit\Widgets::verify($_GET, 'balances', is_file($file) ? (string) (require $file)['secret'] : '');
+    } catch (PlainShow\Kit\KitException $error) {
+        throw new ApiException($error->getMessage(), 403);
+    }
+    $groups = Groups::forUser($userId);
+    $owed = array_sum(array_filter(array_column($groups, 'balance'), fn ($b) => $b > 0));
+    $owe = -array_sum(array_filter(array_column($groups, 'balance'), fn ($b) => $b < 0));
+    return [
+        'type' => 'metrics',
+        'metrics' => [
+            ['label' => 'Du får tillbaka', 'value' => money($owed), 'tone' => $owed > 0 ? 'plus' : null],
+            ['label' => 'Du är skyldig', 'value' => money($owe), 'tone' => $owe > 0 ? 'minus' : null],
+        ],
+        'items' => array_map(fn ($g) => [
+            'title' => $g['name'],
+            'meta' => (int) $g['people'] . ' personer',
+            'url' => 'https://split.plainshow.se/group?id=' . (int) $g['id'],
+            'icon' => 'bx-wallet',
+            'badge' => $g['balance'] === 0 ? 'Kvitt' : money((int) $g['balance'], true),
+            'tone' => $g['balance'] > 0 ? 'plus' : ($g['balance'] < 0 ? 'minus' : null),
+        ], array_slice($groups, 0, 5)),
+        'empty' => 'Du är inte med i någon grupp ännu.',
+        'more' => ['label' => 'Öppna Split', 'url' => 'https://split.plainshow.se/'],
+    ];
+}, null);
