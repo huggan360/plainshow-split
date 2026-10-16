@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Dashboard widget `split.balances`: what you owe and are owed per group, served to Core over a signed request.
+- Served at split.plainshow.se with a Let's Encrypt certificate; the vhost lives in `ops/plainshow-split.conf`.
+
 ## 1.0.0
 
 - Split moves out of the blog into its own PlainShow extension, with its own database.
