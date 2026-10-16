@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Outfit for all text and the serif for titles (kit 0.5).
+
 ## 1.2.0
 
 - Dashboard widget `split.balances`: what you owe and are owed per group, served to Core over a signed request.

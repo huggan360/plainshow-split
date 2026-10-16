@@ -3,7 +3,7 @@
     "name": "Split",
     "description": "Share costs in groups and settle up with Swish.",
     "icon": "bx-wallet",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "url": "https://split.plainshow.se",
     "api": "https://split.plainshow.se/api/v1",
     "health": "https://split.plainshow.se/api/v1/health",
