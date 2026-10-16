@@ -15,7 +15,20 @@ function e_lines(?string $value): string
 function current_identity(): ?Identity
 {
     static $identity = false;
+    if (gateway_identity() !== null) {
+        return gateway_identity();
+    }
     return $identity === false ? $identity = splitAuth()->user() : $identity;
+}
+
+/** The person a call through core's API gateway is for, once its signature has been checked. */
+function gateway_identity(?Identity $set = null): ?Identity
+{
+    static $identity = null;
+    if ($set !== null) {
+        $identity = $set;
+    }
+    return $identity;
 }
 
 function require_identity(): Identity
@@ -33,6 +46,10 @@ function csrf_token(): string
 
 function csrf_valid(): bool
 {
+    // Calls through core's API gateway are signed instead; there is no form to forge.
+    if (gateway_identity() !== null) {
+        return true;
+    }
     $sent = (string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['_token'] ?? '');
     return $sent !== '' && !empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $sent);
 }

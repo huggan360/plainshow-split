@@ -19,6 +19,12 @@ final class Router
         $this->routes[] = [$method, $pattern, $handler, $capability];
     }
 
+    /** @return list<array{method: string, path: string, capability: ?string}> */
+    public function routes(): array
+    {
+        return array_map(fn ($route) => ['method' => $route[0], 'path' => $route[1], 'capability' => $route[3]], $this->routes);
+    }
+
     public function dispatch(string $method, string $path): never
     {
         $path = '/' . trim($path, '/');

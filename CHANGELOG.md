@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- The Split API is reachable at plainshow.se/api/split/v1 with a personal API token, through core's gateway.
+- `/api/v1/openapi.json` describes the API.
+
 ## 1.2.1
 
 - Outfit for all text and the serif for titles (kit 0.5).
