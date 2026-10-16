@@ -40,7 +40,7 @@ $data = [
     ], $group['expenses']),
 ];
 
-split_layout_start($group['name']);
+split_layout_start($group['name'], ['group' => (int) $group['id']]);
 ?>
 <a class="split-back" href="/"><i class="bx bx-left-arrow-alt" aria-hidden="true"></i>Grupper</a>
 <header class="split-head split-head--group">

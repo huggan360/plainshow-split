@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- The PlainShow sidebar: your groups in it, and you at its foot with the account menu; a drawer on phones. The glyph backdrop behind the page. Kit 1.1.
+
 ## 1.3.1
 
 - plainshow-kit 1.0.

@@ -1,5 +1,5 @@
 <?php
-/** Page frame: PlainShow top bar, content and phone tab bar. */
+/** Page frame: the PlainShow sidebar (groups, and you at the foot), top bar and content. */
 
 function split_layout_start(string $title, array $options = []): void
 {
@@ -24,20 +24,58 @@ function split_layout_start(string $title, array $options = []): void
     <link rel="stylesheet" href="<?= e(split_asset('assets/split/split.css')) ?>">
     <script>try { var t = localStorage.getItem('plainshow-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
     <script src="/ui/js/plainshow.js?v=<?= e(split_ui_version()) ?>" defer></script>
+    <script src="/ui/js/backdrop.js?v=<?= e(split_ui_version()) ?>" defer></script>
     <script src="<?= e(split_asset('assets/split/split.js')) ?>" defer></script>
 </head>
 <body class="ps split">
-<header class="ps-topnav">
-    <div class="ps-topnav__inner">
-        <a class="ps-brand ps-topnav__brand" href="/">
-            <img class="ps-brand__logo" src="/ui/brand/plainshow-logo.webp?v=<?= e(split_ui_version()) ?>" alt="PlainShow" width="92" height="30">
-            <span class="ps-brand__suffix">Split</span>
-        </a>
-        <span class="ps-topnav__spacer"></span>
-        <?php if ($me): ?>
-        <div class="ps-topnav__actions">
+<canvas class="ps-backdrop" aria-hidden="true"></canvas>
+<div class="ps-shell" data-ps-shell>
+    <aside class="ps-sidebar" aria-label="Split">
+        <div class="ps-sidebar__brand">
+            <a class="ps-brand" href="/">
+                <img class="ps-brand__logo" src="/ui/brand/plainshow-logo.webp?v=<?= e(split_ui_version()) ?>" alt="PlainShow" width="92" height="30">
+                <span class="ps-brand__suffix">Split</span>
+            </a>
+        </div>
+        <?php if ($me): $groups = Split\Domain\Groups::forUser($identity->id()); $current = (int) ($options['group'] ?? 0); ?>
+        <nav class="ps-nav">
+            <a class="ps-nav__item<?= $current === 0 ? ' is-active' : '' ?>" href="/"><i class="bx bx-wallet"></i>Grupper</a>
+        </nav>
+        <?php if ($groups): ?>
+        <div class="ps-sidebar__section">
+            <p class="ps-eyebrow ps-sidebar__label">Dina grupper</p>
+            <nav class="ps-nav">
+                <?php foreach ($groups as $group): ?>
+                <a class="ps-nav__item<?= $current === (int) $group['id'] ? ' is-active' : '' ?>" href="/group?id=<?= (int) $group['id'] ?>"><i class="bx bx-group"></i><span class="split-nav__name"><?= e($group['name']) ?></span></a>
+                <?php endforeach; ?>
+            </nav>
+        </div>
+        <?php endif; ?>
+        <div class="ps-sidebar__foot">
+            <div class="ps-dropdown ps-me" data-ps-dropdown>
+                <button type="button" class="ps-me__button" data-ps-dropdown-trigger aria-expanded="false" aria-label="Konto">
+                    <?= avatar($me, 'sm') ?>
+                    <span class="ps-me__text"><span class="ps-me__name"><?= e($me['name']) ?></span><span class="ps-me__meta"><?= $me['phone'] ? 'Swish +' . e($me['phone']) : 'Inget Swish-nummer' ?></span></span>
+                    <i class="bx bx-chevron-up ps-me__chevron" aria-hidden="true"></i>
+                </button>
+                <div class="ps-dropdown__menu ps-dropdown__menu--up" data-ps-dropdown-menu hidden>
+                    <a class="ps-dropdown__item" href="https://plainshow.se/account"><i class="bx bx-id-card"></i>Konto och telefonnummer</a>
+                    <button type="button" class="ps-dropdown__item" data-ps-theme-toggle><i class="bx bx-adjust"></i><span data-ps-theme-label>Ljust tema</span></button>
+                    <div class="ps-dropdown__sep"></div>
+                    <a class="ps-dropdown__item" href="/auth/logout"><i class="bx bx-log-out"></i>Logga ut</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+    </aside>
+    <div class="ps-main">
+        <header class="ps-topbar split-topbar">
+            <button type="button" class="ps-btn ps-btn--ghost ps-btn--icon ps-menu-toggle" data-ps-menu-toggle aria-label="Öppna menyn"><i class="bx bx-menu"></i></button>
+            <a class="ps-brand split-topbar__mark" href="/" aria-label="Split"><img class="ps-brand__mark" src="/ui/brand/plainshow-icon.webp?v=<?= e(split_ui_version()) ?>" alt=""></a>
+            <span class="ps-topbar__spacer"></span>
+            <?php if ($me): ?>
             <div class="ps-dropdown" data-ps-dropdown>
-                <button type="button" class="ps-btn ps-btn--ghost ps-btn--icon" data-ps-dropdown-trigger aria-expanded="false" aria-label="Byt tjänst"><i class="bx bx-grid-small"></i></button>
+                <button type="button" class="ps-btn ps-btn--ghost ps-btn--icon ps-switcher__trigger" data-ps-dropdown-trigger aria-expanded="false" aria-label="Byt tjänst"><i class="bx bx-grid"></i></button>
                 <div class="ps-switcher__panel" data-ps-dropdown-menu hidden>
                     <div class="ps-switcher__grid">
                         <a class="ps-switcher__app" href="https://plainshow.se"><i class="bx bx-grid-alt"></i>Dashboard</a>
@@ -48,29 +86,18 @@ function split_layout_start(string $title, array $options = []): void
                     </div>
                 </div>
             </div>
-            <div class="ps-dropdown" data-ps-dropdown>
-                <button type="button" class="ps-btn ps-btn--ghost split-account" data-ps-dropdown-trigger aria-expanded="false" aria-label="Konto"><?= avatar($me, 'sm') ?></button>
-                <div class="ps-dropdown__menu" data-ps-dropdown-menu hidden>
-                    <div class="ps-dropdown__head"><?= avatar($me) ?><div class="split-account__who"><strong><?= e($me['name']) ?></strong><span class="ps-muted ps-small"><?= $me['phone'] ? 'Swish +' . e($me['phone']) : 'Inget Swish-nummer' ?></span></div></div>
-                    <div class="ps-dropdown__sep"></div>
-                    <a class="ps-dropdown__item" href="https://plainshow.se/account"><i class="bx bx-id-card"></i>Konto och telefonnummer</a>
-                    <button type="button" class="ps-dropdown__item" data-ps-theme-toggle><i class="bx bx-adjust"></i><span data-ps-theme-label>Ljust tema</span></button>
-                    <div class="ps-dropdown__sep"></div>
-                    <a class="ps-dropdown__item" href="/auth/logout"><i class="bx bx-log-out"></i>Logga ut</a>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
-</header>
-<main class="ps-page split-page">
+            <?php endif; ?>
+        </header>
+        <main class="ps-content split-page">
 <?php
 }
 
 function split_layout_end(string $scripts = ''): void
 {
     ?>
-</main>
+        </main>
+    </div>
+</div>
 <div class="ps-toasts" aria-live="polite" data-toasts></div>
 <?= $scripts ?>
 </body>

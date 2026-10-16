@@ -132,3 +132,7 @@
     .split-share__result { grid-column: 2; }
     .is-equal .split-share { grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* The sidebar shell */
+.split-nav__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 992px) { .split-topbar__mark { display: none; } .split-topbar { border-bottom-color: transparent; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; } }
