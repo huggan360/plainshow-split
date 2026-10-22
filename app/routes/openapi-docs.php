@@ -14,7 +14,7 @@ $expense = [
 return [
     'GET /health' => ['summary' => 'Whether Split answers', 'returns' => 'The service name and version'],
     'GET /groups' => ['summary' => 'Your groups', 'description' => 'Every group you are in, with your balance in each.'],
-    'POST /groups' => ['summary' => 'Make a group', 'body' => ['name' => ['string', 'The group name', true], 'members' => ['array', 'Who else is in it, by user id', false]], 'returns' => '`id`'],
+    'POST /groups' => ['summary' => 'Make a group', 'body' => ['name' => ['string', 'The group name', true], 'sourceGroupId' => ['integer', 'Optional PlainShow group id', false], 'members' => ['array', 'Extra people, by user id', false]], 'returns' => '`id`'],
     'GET /groups/{id}' => ['summary' => 'A group', 'description' => 'Members, balances, expenses, payments and the fewest payments that settle everyone.', 'params' => ['id' => 'The group']],
     'POST /groups/{id}' => ['summary' => 'Rename a group', 'params' => ['id' => 'The group'], 'body' => ['name' => ['string', 'The new name', true]]],
     'DELETE /groups/{id}' => ['summary' => 'Remove a group', 'description' => 'Only who made it, and only when everyone is settled.', 'params' => ['id' => 'The group']],

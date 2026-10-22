@@ -25,20 +25,30 @@ if [ "${1:-}" = "--rollback" ]; then
 fi
 
 cd "$SOURCE"
-[ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "Commit changes in $SOURCE first." >&2; exit 1; }
+if [ "${1:-}" != --worktree ]; then
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "Commit changes in $SOURCE first." >&2; exit 1; }
+fi
 REF=${1:-$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD)}
 NAME="$(date +%Y%m%d%H%M%S)-${REF//\//-}"
 RELEASE="$BASE/releases/$NAME"
 
 say "Building split $REF into $RELEASE"
 mkdir -p "$RELEASE"
-git archive --format=tar "$REF" | tar -x -C "$RELEASE"
+git archive --format=tar "${REF/--worktree/HEAD}" | tar -x -C "$RELEASE"
+if [ "$REF" = --worktree ]; then
+    git diff --binary HEAD | (cd "$RELEASE" && git apply)
+    git ls-files --others --exclude-standard -z | tar --null -T - -cf - | tar -x -C "$RELEASE"
+fi
 rm -rf "$RELEASE/config" "$RELEASE/storage"
 ln -s "$BASE/shared/config" "$RELEASE/config"
 ln -s "$BASE/shared/storage" "$RELEASE/storage"
 
 cd "$RELEASE"
 GIT_TERMINAL_PROMPT=0 COMPOSER_NO_INTERACTION=1 composer install --no-dev --optimize-autoloader --no-progress --quiet
+if [ "$REF" = --worktree ] && [ -d "$SOURCE/public/ui" ]; then
+    rm -rf "$RELEASE/public/ui"
+    cp -a "$SOURCE/public/ui" "$RELEASE/public/ui"
+fi
 php app/console.php migrate
 
 ME=$(id -un)

@@ -79,10 +79,11 @@ function split_layout_start(string $title, array $options = []): void
                 <div class="ps-switcher__panel" data-ps-dropdown-menu hidden>
                     <div class="ps-switcher__grid">
                         <a class="ps-switcher__app" href="https://plainshow.se"><i class="bx bx-grid-alt"></i>Dashboard</a>
-                        <a class="ps-switcher__app" href="https://blog.plainshow.se"><i class="bx bx-news"></i>Blog</a>
+                        <?php if (split_has_service('blog')): ?><a class="ps-switcher__app" href="https://blog.plainshow.se"><i class="bx bx-news"></i>Blog</a><?php endif; ?>
                         <a class="ps-switcher__app is-current" href="/"><i class="bx bx-wallet"></i>Split</a>
-                        <a class="ps-switcher__app" href="https://latex.plainshow.se"><i class="bx bx-code-curly"></i>LaTeX</a>
-                        <a class="ps-switcher__app" href="https://cloud.plainshow.se"><i class="bx bx-cloud"></i>Cloud</a>
+                        <?php if (split_has_service('latex')): ?><a class="ps-switcher__app" href="https://latex.plainshow.se"><i class="bx bx-code-curly"></i>LaTeX</a><?php endif; ?>
+                        <?php if (split_has_service('web')): ?><a class="ps-switcher__app" href="https://web.plainshow.se"><i class="bx bx-server"></i>Web</a><?php endif; ?>
+                        <?php if (split_has_service('cloud')): ?><a class="ps-switcher__app" href="https://cloud.plainshow.se"><i class="bx bx-cloud"></i>Cloud</a><?php endif; ?>
                     </div>
                 </div>
             </div>

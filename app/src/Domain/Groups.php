@@ -20,10 +20,11 @@ final class Groups
     /** The person's groups with their own balance in each. */
     public static function forUser(int $userId): array
     {
+        self::syncLinkedForUser($userId);
         $stmt = splitDb()->prepare('SELECT g.id, g.name, g.created_by, g.updated_at,
-                (SELECT COUNT(*) FROM members m2 WHERE m2.group_id = g.id) AS people,
+                (SELECT COUNT(*) FROM members m2 WHERE m2.group_id = g.id AND m2.source != \'excluded\') AS people,
                 (SELECT MAX(a.created_at) FROM activity a WHERE a.group_id = g.id) AS active_at
-            FROM `groups` g JOIN members m ON m.group_id = g.id AND m.user_id = ?
+            FROM `groups` g JOIN members m ON m.group_id = g.id AND m.user_id = ? AND m.source != \'excluded\'
             ORDER BY active_at DESC, g.id DESC');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
@@ -40,8 +41,9 @@ final class Groups
     /** Everything about one group, after checking the person is in it. */
     public static function open(int $groupId, Identity $identity): array
     {
+        self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
-        if (!$group || (!self::isMember($groupId, $identity->id()) && !$identity->can('split.group.moderate'))) {
+        if (!$group || (!self::isMember($groupId, $identity->id()) && !PlatformGroups::can($identity->id(), 'split.group.moderate'))) {
             throw new ApiException('Gruppen finns inte, eller så är du inte med i den.', 404);
         }
         return $group + self::snapshot($groupId) + ['can_manage' => self::canManage($group, $identity)];
@@ -50,7 +52,7 @@ final class Groups
     public static function snapshot(int $groupId): array
     {
         $db = splitDb();
-        $memberIds = array_map('intval', array_column(self::query('SELECT user_id FROM members WHERE group_id = ? ORDER BY joined_at, user_id', $groupId), 'user_id'));
+        $memberIds = array_map('intval', array_column(self::query("SELECT user_id FROM members WHERE group_id = ? AND source != 'excluded' ORDER BY joined_at, user_id", $groupId), 'user_id'));
         $expenses = self::query('SELECT id, title, amount, paid_by, created_by, spent_on, notes, split_mode, created_at FROM expenses WHERE group_id = ? ORDER BY spent_on DESC, id DESC', $groupId);
         $shares = self::query('SELECT s.expense_id, s.user_id, s.amount FROM shares s JOIN expenses e ON e.id = s.expense_id WHERE e.group_id = ?', $groupId);
         $byExpense = [];
@@ -80,21 +82,24 @@ final class Groups
 
     /* ---------- Groups and members ---------- */
 
-    public static function create(Identity $identity, string $name, array $memberIds): int
+    public static function create(Identity $identity, string $name, array $memberIds, ?array $source = null): int
     {
-        if (!$identity->can('split.group.create')) {
+        if (!PlatformGroups::can($identity->id(), 'split.group.create')) {
             throw new ApiException('Du har inte behörighet att skapa grupper.', 403);
         }
         $name = self::cleanName($name);
-        $members = self::validPeople(array_merge([$identity->id()], $memberIds));
+        $linkedMembers = $source === null ? [] : self::validPeople($source['memberIds'] ?? []);
+        $members = self::validPeople(array_merge([$identity->id()], $memberIds, $linkedMembers));
         $db = splitDb();
         $db->begin_transaction();
         $creator = $identity->id();
-        $stmt = $db->prepare('INSERT INTO `groups` (name, created_by) VALUES (?, ?)');
-        $stmt->bind_param('si', $name, $creator);
+        $sourceId = $source['id'] ?? null;
+        $stmt = $db->prepare('INSERT INTO `groups` (name, created_by, plainshow_group_id) VALUES (?, ?, ?)');
+        $stmt->bind_param('sii', $name, $creator, $sourceId);
         $stmt->execute();
         $groupId = (int) $db->insert_id;
-        self::insertMembers($groupId, $members);
+        self::insertMembers($groupId, $linkedMembers, 'linked');
+        self::insertMembers($groupId, array_values(array_diff($members, $linkedMembers)));
         self::log($groupId, $creator, 'created', 'skapade gruppen');
         $db->commit();
         Notify::people(array_diff($members, [$creator]), $identity->name() . ' lade till dig i ' . $name, $groupId);
@@ -114,7 +119,7 @@ final class Groups
     public static function addMembers(int $groupId, Identity $identity, array $ids): int
     {
         $group = self::requireMember($groupId, $identity);
-        $current = array_map('intval', array_column(self::query('SELECT user_id FROM members WHERE group_id = ?', $groupId), 'user_id'));
+        $current = array_map('intval', array_column(self::query("SELECT user_id FROM members WHERE group_id = ? AND source != 'excluded'", $groupId), 'user_id'));
         $new = array_values(array_diff(self::validPeople($ids), $current));
         if (!$new) {
             return 0;
@@ -139,10 +144,15 @@ final class Groups
             $who = $leaving ? 'Du' : People::one($userId)['first'];
             throw new ApiException("$who har " . ($balance > 0 ? 'pengar kvar att få' : 'en skuld') . ' på ' . money(abs($balance)) . '. Gör upp först.', 409);
         }
-        $stmt = splitDb()->prepare('DELETE FROM members WHERE group_id = ? AND user_id = ?');
+        $stmt = splitDb()->prepare("UPDATE members SET source = 'excluded' WHERE group_id = ? AND user_id = ? AND source = 'linked'");
         $stmt->bind_param('ii', $groupId, $userId);
         $stmt->execute();
-        if ((int) self::query('SELECT COUNT(*) AS n FROM members WHERE group_id = ?', $groupId)[0]['n'] === 0) {
+        if ($stmt->affected_rows === 0) {
+            $delete = splitDb()->prepare('DELETE FROM members WHERE group_id = ? AND user_id = ?');
+            $delete->bind_param('ii', $groupId, $userId);
+            $delete->execute();
+        }
+        if ((int) self::query("SELECT COUNT(*) AS n FROM members WHERE group_id = ? AND source != 'excluded'", $groupId)[0]['n'] === 0) {
             self::deleteRow($groupId);
             return true;
         }
@@ -162,7 +172,7 @@ final class Groups
     public static function saveExpense(int $groupId, Identity $identity, array $data, ?int $expenseId = null): int
     {
         $group = self::requireMember($groupId, $identity);
-        $members = array_map('intval', array_column(self::query('SELECT user_id FROM members WHERE group_id = ?', $groupId), 'user_id'));
+        $members = array_map('intval', array_column(self::query("SELECT user_id FROM members WHERE group_id = ? AND source != 'excluded'", $groupId), 'user_id'));
         $title = trim((string) $data['title']);
         if ($title === '' || mb_strlen($title) > 190) {
             throw new ApiException('Skriv vad det gällde.', 422);
@@ -286,7 +296,7 @@ final class Groups
 
     public static function canManage(array $group, Identity $identity): bool
     {
-        return (int) $group['created_by'] === $identity->id() || $identity->can('split.group.moderate');
+        return (int) $group['created_by'] === $identity->id() || PlatformGroups::can($identity->id(), 'split.group.moderate');
     }
 
     public static function canEditExpense(array $group, array $expense, Identity $identity): bool
@@ -296,6 +306,7 @@ final class Groups
 
     private static function requireMember(int $groupId, Identity $identity): array
     {
+        self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
         if (!$group || !self::isMember($groupId, $identity->id())) {
             throw new ApiException('Gruppen finns inte, eller så är du inte med i den.', 404);
@@ -305,8 +316,9 @@ final class Groups
 
     private static function requireManager(int $groupId, Identity $identity): array
     {
+        self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
-        if (!$group || (!self::isMember($groupId, $identity->id()) && !$identity->can('split.group.moderate'))) {
+        if (!$group || (!self::isMember($groupId, $identity->id()) && !PlatformGroups::can($identity->id(), 'split.group.moderate'))) {
             throw new ApiException('Gruppen finns inte.', 404);
         }
         if (!self::canManage($group, $identity)) {
@@ -334,18 +346,50 @@ final class Groups
 
     private static function isMember(int $groupId, int $userId): bool
     {
-        $stmt = splitDb()->prepare('SELECT 1 FROM members WHERE group_id = ? AND user_id = ?');
+        $stmt = splitDb()->prepare("SELECT 1 FROM members WHERE group_id = ? AND user_id = ? AND source != 'excluded'");
         $stmt->bind_param('ii', $groupId, $userId);
         $stmt->execute();
         return (bool) $stmt->get_result()->fetch_row();
     }
 
-    private static function insertMembers(int $groupId, array $ids): void
+    private static function insertMembers(int $groupId, array $ids, string $source = 'manual'): void
     {
-        $stmt = splitDb()->prepare('INSERT IGNORE INTO members (group_id, user_id) VALUES (?, ?)');
+        $stmt = splitDb()->prepare('INSERT IGNORE INTO members (group_id, user_id, source) VALUES (?, ?, ?)');
         foreach ($ids as $id) {
-            $stmt->bind_param('ii', $groupId, $id);
+            $stmt->bind_param('iis', $groupId, $id, $source);
             $stmt->execute();
+        }
+    }
+
+    private static function syncLinkedForUser(int $userId): void
+    {
+        if ((int) splitDb()->query('SELECT COUNT(*) FROM `groups` WHERE plainshow_group_id IS NOT NULL')->fetch_row()[0] === 0) {
+            return;
+        }
+        $platform = PlatformGroups::forUser($userId);
+        $stmt = splitDb()->prepare('SELECT g.id, g.plainshow_group_id, m.source FROM `groups` g LEFT JOIN members m ON m.group_id = g.id AND m.user_id = ? WHERE g.plainshow_group_id IS NOT NULL');
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $group) {
+            $groupId = (int) $group['id'];
+            $source = $platform[(int) $group['plainshow_group_id']] ?? null;
+            if ($source === null) {
+                if ($group['source'] === 'linked') {
+                    $remove = splitDb()->prepare("DELETE FROM members WHERE group_id = ? AND user_id = ? AND source = 'linked'");
+                    $remove->bind_param('ii', $groupId, $userId);
+                    $remove->execute();
+                }
+                continue;
+            }
+            $memberIds = array_values(array_unique(array_map('intval', $source['memberIds'] ?? [])));
+            $existing = self::query("SELECT user_id, source FROM members WHERE group_id = ?", $groupId);
+            $linked = array_map('intval', array_column(array_filter($existing, fn ($member) => $member['source'] === 'linked'), 'user_id'));
+            foreach (array_diff($linked, $memberIds) as $removedId) {
+                $remove = splitDb()->prepare("DELETE FROM members WHERE group_id = ? AND user_id = ? AND source = 'linked'");
+                $remove->bind_param('ii', $groupId, $removedId);
+                $remove->execute();
+            }
+            self::insertMembers($groupId, array_values(array_diff($memberIds, array_map('intval', array_column($existing, 'user_id')))), 'linked');
         }
     }
 

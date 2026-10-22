@@ -6,6 +6,7 @@ require dirname(__DIR__) . '/app/views/layout.php';
 use Split\Api\ApiException;
 use Split\Domain\Groups;
 use Split\Domain\People;
+use Split\Domain\PlatformGroups;
 
 $identity = require_identity();
 $me = $identity->id();
@@ -24,6 +25,8 @@ $myBalance = $group['balances'][$me] ?? 0;
 $total = array_sum(array_column($group['expenses'], 'amount'));
 $maxBalance = max(1, ...array_map('abs', array_values($group['balances']) ?: [1]));
 $directory = array_values(array_filter(People::directory(), fn ($p) => !in_array($p['id'], $group['member_ids'], true)));
+$plainshowGroups = [];
+try { $plainshowGroups = PlatformGroups::forUser($identity->id()); } catch (\Split\Api\ApiException) {}
 $months = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
 
 // For the editor: members and each expense with whether you may change it.
@@ -268,8 +271,8 @@ split_layout_start($group['name'], ['group' => (int) $group['id']]);
             <div class="ps-modal__head"><h2 class="ps-modal__title" id="members-add-title">Lägg till personer</h2><button type="button" class="ps-btn ps-btn--ghost ps-btn--icon" data-modal-close aria-label="Stäng"><i class="bx bx-x"></i></button></div>
             <div class="ps-modal__body">
                 <?php if ($directory): ?>
-                    <input class="ps-input split-people-filter" type="search" placeholder="Sök" aria-label="Sök personer" data-people-filter>
-                    <div class="split-people" data-people><?php foreach ($directory as $person): ?><label class="split-person" data-name="<?= e(mb_strtolower($person['name'])) ?>"><input type="checkbox" name="members" value="<?= $person['id'] ?>"><?= avatar($person, 'xs') ?><span><?= e($person['name']) ?></span></label><?php endforeach; ?></div>
+                    <div class="ps-input-wrap split-people-filter"><i class="bx bx-search" aria-hidden="true"></i><input class="ps-input" type="search" placeholder="Sök personer och grupper" aria-label="Sök personer" data-people-filter></div>
+                    <div class="split-people" data-people><?php if ($plainshowGroups): ?><div class="split-picker-heading">Grupper</div><?php foreach ($plainshowGroups as $source): ?><button type="button" class="split-person split-person--group" data-name="<?= e(mb_strtolower($source['name'])) ?>" data-source-members='<?= e(json_encode(array_values($source['memberIds'] ?? []))) ?>'><span class="split-group-avatar"><i class="bx bx-group"></i></span><span class="split-person__text"><strong><?= e($source['name']) ?></strong></span><span class="ps-badge ps-badge--accent">Grupp</span><i class="bx bx-plus"></i></button><?php endforeach; ?><?php endif; ?><?php if ($directory): ?><div class="split-picker-heading">Föreslagna personer</div><?php endif; ?><?php foreach ($directory as $index => $person): ?><?php if ($index === 3): ?><div class="split-picker-heading">Personer</div><?php endif; ?><label class="split-person" data-name="<?= e(mb_strtolower($person['name'] . ' ' . $person['username'])) ?>"><input type="checkbox" name="members" value="<?= $person['id'] ?>"><?= avatar($person, 'xs') ?><span class="split-person__text"><strong><?= e($person['name']) ?></strong><small>@<?= e($person['username']) ?></small></span></label><?php endforeach; ?></div>
                 <?php else: ?><p class="ps-muted">Alla är redan med.</p><?php endif; ?>
             </div>
             <div class="ps-modal__foot"><button type="button" class="ps-btn ps-btn--ghost" data-modal-close>Avbryt</button><button type="submit" class="ps-btn ps-btn--primary"<?= $directory ? '' : ' disabled' ?>>Lägg till</button></div>

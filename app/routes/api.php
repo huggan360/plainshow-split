@@ -11,6 +11,7 @@ use Split\Api\Router;
 use Split\Domain\Groups;
 use Split\Domain\Ledger;
 use Split\Domain\People;
+use Split\Domain\PlatformGroups;
 
 /** @var Router $router */
 
@@ -21,9 +22,14 @@ $router->add('GET', '/groups', fn () => ['groups' => array_map(fn ($g) => [
 ], Groups::forUser(current_identity()->id()))]);
 
 $router->add('POST', '/groups', function (Request $request) {
-    $id = Groups::create(current_identity(), $request->string('name', 150), (array) $request->input('members', []));
+    $sourceId = $request->int('sourceGroupId');
+    $source = $sourceId > 0 ? (PlatformGroups::forUser(current_identity()->id())[$sourceId] ?? null) : null;
+    if ($sourceId > 0 && !$source) {
+        throw new ApiException('Du är inte med i den PlainShow-gruppen.', 403);
+    }
+    $id = Groups::create(current_identity(), $request->string('name', 150) ?: ($source['name'] ?? ''), (array) $request->input('members', []), $source);
     return ['id' => $id, 'redirect' => "/group?id=$id"];
-});
+}, 'split.group.create');
 
 $router->add('GET', '/groups/{id}', function (Request $request) {
     $group = Groups::open($request->param('id'), current_identity());

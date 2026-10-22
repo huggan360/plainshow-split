@@ -47,11 +47,18 @@
 @media (max-width: 520px) { .split-totals { grid-template-columns: minmax(0, 1fr); } }
 
 /* People pickers */
-.split-people-filter { margin: 6px 0 8px; }
+.split-people-filter { margin: 10px 0 8px; }
 .split-people { display: grid; gap: 2px; max-height: 300px; overflow-y: auto; padding: 4px; border: 1px solid var(--ps-panel-border); border-radius: 12px; }
-.split-person { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; font: var(--ps-text-sm) var(--ps-font-ui); }
+.split-person { display: flex; width: 100%; align-items: center; gap: 10px; padding: 7px 8px; border: 0; border-radius: 8px; background: none; color: inherit; text-align: left; cursor: pointer; font: var(--ps-text-sm) var(--ps-font-ui); }
 .split-person:hover { background: var(--ps-hover); }
 .split-person input, .split-share input[type=checkbox] { accent-color: var(--ps-accent); width: 16px; height: 16px; }
+.split-person__text { display: grid; flex: 1; min-width: 0; }
+.split-person__text strong, .split-person__text small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.split-person__text small { color: var(--ps-text-muted); }
+.split-picker-section { display: grid; gap: 6px; margin-bottom: 8px; }
+.split-people--groups { max-height: 180px; }
+.split-group-avatar { display: grid; flex: none; width: 30px; height: 30px; place-items: center; border: 2px solid var(--ps-accent); border-radius: 9px; background: var(--ps-accent-bg); color: var(--ps-accent-text); }
+.split-picker-heading { padding: 8px 8px 2px; color: var(--ps-text-muted); font: 600 var(--ps-text-xs) var(--ps-font-ui); letter-spacing: .04em; text-transform: uppercase; }
 
 /* Group status */
 .split-status { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 14px 18px; border: 1px solid var(--ps-shell-border); border-radius: 18px; background: var(--ps-shell); }

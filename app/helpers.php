@@ -18,7 +18,11 @@ function current_identity(): ?Identity
     if (gateway_identity() !== null) {
         return gateway_identity();
     }
-    return $identity === false ? $identity = splitAuth()->user() : $identity;
+    $person = $identity === false ? $identity = splitAuth()->user() : $identity;
+    if ($person !== null) {
+        \Split\Domain\PlatformGroups::forUser($person->id());
+    }
+    return $person;
 }
 
 /** The person a call through core's API gateway is for, once its signature has been checked. */
@@ -33,7 +37,29 @@ function gateway_identity(?Identity $set = null): ?Identity
 
 function require_identity(): Identity
 {
-    return splitAuth()->requireUser();
+    $person = splitAuth()->requireUser();
+    try {
+        \Split\Domain\PlatformGroups::forUser($person->id());
+    } catch (\Split\Api\ApiException $error) {
+        http_response_code($error->status);
+        header('Content-Type: text/html; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo '<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Split</title><p>', e($error->getMessage()), '</p><a href="https://plainshow.se/">PlainShow</a></html>';
+        exit;
+    }
+    return $person;
+}
+
+function split_can(string $capability): bool
+{
+    $identity = current_identity();
+    return $identity !== null && \Split\Domain\PlatformGroups::can($identity->id(), $capability);
+}
+
+function split_has_service(string $service): bool
+{
+    $identity = current_identity();
+    return $service === 'core' || ($identity !== null && in_array($service, array_map('strval', \Split\Domain\PlatformGroups::response($identity->id())['viewer']['services'] ?? []), true));
 }
 
 function csrf_token(): string
@@ -101,7 +127,7 @@ function avatar(array $person, string $size = ''): string
 function split_ui_version(): string
 {
     static $version = null;
-    return $version ??= substr((string) \Composer\InstalledVersions::getReference('plainshow/kit'), 0, 8) ?: 'dev';
+    return $version ??= substr(md5((string) @filemtime(__DIR__ . '/../public/ui/css/plainshow.css')), 0, 10);
 }
 
 function split_asset(string $path): string

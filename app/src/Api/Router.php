@@ -72,7 +72,7 @@ final class Router
         if (!$identity->hasService('split')) {
             throw new ApiException('Du har inte tillgång till Split.', 403);
         }
-        if ($capability !== 'user' && !$identity->can($capability)) {
+        if ($capability !== 'user' && !split_can($capability)) {
             throw new ApiException('Du har inte behörighet att göra det.', 403);
         }
     }
