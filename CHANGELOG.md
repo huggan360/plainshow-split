@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.0
+
+- Svenska, English och Nederlands: webbläsarens språk som standard, eller valt i kontomenyn.
+- The account menu is the same in every app: Account, the app's own items, Language, Theme, Sign out.
+
 ## 1.4.0
 
 - The PlainShow sidebar: your groups in it, and you at its foot with the account menu; a drawer on phones. The glyph backdrop behind the page. Kit 1.1.

@@ -21,7 +21,7 @@ final class People
             $people[(int) $row['id']] = self::shape($row);
         }
         foreach ($ids as $id) {
-            $people[$id] ??= ['id' => $id, 'username' => '', 'name' => 'Borttagen person', 'first' => 'Borttagen', 'initials' => '?', 'avatar' => null, 'phone' => null];
+            $people[$id] ??= ['id' => $id, 'username' => '', 'name' => ps_t('Borttagen person'), 'first' => 'Borttagen', 'initials' => '?', 'avatar' => null, 'phone' => null];
         }
         return $people;
     }

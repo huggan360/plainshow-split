@@ -26,7 +26,7 @@ if ($path === '/openapi.json' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
     header('Cache-Control: public, max-age=300');
     $manifest = json_decode((string) file_get_contents(dirname(__DIR__, 3) . '/plainshow.json'), true);
     echo json_encode(PlainShow\Kit\OpenApi::build($router->routes(), require dirname(__DIR__, 3) . '/app/routes/openapi-docs.php', [
-        'title' => 'PlainShow Split', 'version' => (string) ($manifest['version'] ?? '1'), 'description' => 'Groups, shared expenses and settling up. Amounts are sent in kronor and returned in öre.',
+        'title' => ps_t('PlainShow Split'), 'version' => (string) ($manifest['version'] ?? '1'), 'description' => ps_t('Groups, shared expenses and settling up. Amounts are sent in kronor and returned in öre.'),
     ], 'https://plainshow.se/api/split/v1'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }

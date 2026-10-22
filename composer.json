@@ -5,7 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
-        "plainshow/kit": "^1.0"
+        "plainshow/kit": "^1.7"
     },
     "autoload": {
         "psr-4": { "Split\\": "app/src/" },

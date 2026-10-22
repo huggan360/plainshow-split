@@ -44,7 +44,7 @@ function require_identity(): Identity
         http_response_code($error->status);
         header('Content-Type: text/html; charset=utf-8');
         header('Cache-Control: no-store');
-        echo '<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Split</title><p>', e($error->getMessage()), '</p><a href="https://plainshow.se/">PlainShow</a></html>';
+        echo '<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . ps_h('Split') . '</title><p>', e($error->getMessage()), '</p><a href="https://plainshow.se/">' . ps_h('PlainShow') . '</a></html>';
         exit;
     }
     return $person;

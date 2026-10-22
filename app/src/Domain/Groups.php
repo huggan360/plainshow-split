@@ -44,7 +44,7 @@ final class Groups
         self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
         if (!$group || (!self::isMember($groupId, $identity->id()) && !PlatformGroups::can($identity->id(), 'split.group.moderate'))) {
-            throw new ApiException('Gruppen finns inte, eller så är du inte med i den.', 404);
+            throw new ApiException(ps_t('Gruppen finns inte, eller så är du inte med i den.'), 404);
         }
         return $group + self::snapshot($groupId) + ['can_manage' => self::canManage($group, $identity)];
     }
@@ -85,7 +85,7 @@ final class Groups
     public static function create(Identity $identity, string $name, array $memberIds, ?array $source = null): int
     {
         if (!PlatformGroups::can($identity->id(), 'split.group.create')) {
-            throw new ApiException('Du har inte behörighet att skapa grupper.', 403);
+            throw new ApiException(ps_t('Du har inte behörighet att skapa grupper.'), 403);
         }
         $name = self::cleanName($name);
         $linkedMembers = $source === null ? [] : self::validPeople($source['memberIds'] ?? []);
@@ -137,11 +137,11 @@ final class Groups
         $leaving = $userId === $identity->id();
         $leaving ? self::requireMember($groupId, $identity) : self::requireManager($groupId, $identity);
         if (!self::isMember($groupId, $userId)) {
-            throw new ApiException('Personen är inte med i gruppen.', 404);
+            throw new ApiException(ps_t('Personen är inte med i gruppen.'), 404);
         }
         $balance = self::snapshot($groupId)['balances'][$userId] ?? 0;
         if ($balance !== 0) {
-            $who = $leaving ? 'Du' : People::one($userId)['first'];
+            $who = $leaving ? ps_t('Du') : People::one($userId)['first'];
             throw new ApiException("$who har " . ($balance > 0 ? 'pengar kvar att få' : 'en skuld') . ' på ' . money(abs($balance)) . '. Gör upp först.', 409);
         }
         $stmt = splitDb()->prepare("UPDATE members SET source = 'excluded' WHERE group_id = ? AND user_id = ? AND source = 'linked'");
@@ -175,20 +175,20 @@ final class Groups
         $members = array_map('intval', array_column(self::query("SELECT user_id FROM members WHERE group_id = ? AND source != 'excluded'", $groupId), 'user_id'));
         $title = trim((string) $data['title']);
         if ($title === '' || mb_strlen($title) > 190) {
-            throw new ApiException('Skriv vad det gällde.', 422);
+            throw new ApiException(ps_t('Skriv vad det gällde.'), 422);
         }
         $amount = (int) $data['amount'];
         if ($amount <= 0 || $amount > 100_000_000) {
-            throw new ApiException('Beloppet måste vara större än 0.', 422);
+            throw new ApiException(ps_t('Beloppet måste vara större än 0.'), 422);
         }
         $paidBy = (int) $data['paid_by'];
         if (!in_array($paidBy, $members, true)) {
-            throw new ApiException('Den som betalade måste vara med i gruppen.', 422);
+            throw new ApiException(ps_t('Den som betalade måste vara med i gruppen.'), 422);
         }
         $mode = in_array($data['mode'], self::MODES, true) ? $data['mode'] : 'equal';
         $people = array_values(array_intersect(array_map('intval', (array) $data['people']), $members));
         if (count($people) !== count((array) $data['people'])) {
-            throw new ApiException('Alla som delar måste vara med i gruppen.', 422);
+            throw new ApiException(ps_t('Alla som delar måste vara med i gruppen.'), 422);
         }
         $shares = Ledger::shares($amount, $mode, $people, (array) ($data['inputs'] ?? []));
         $spentOn = (string) $data['spent_on'];
@@ -248,13 +248,13 @@ final class Groups
         $group = self::requireMember($groupId, $identity);
         $actor = $identity->id();
         if (!in_array($actor, [$from, $to], true) && !self::canManage($group, $identity)) {
-            throw new ApiException('Du kan bara registrera betalningar du själv är med i.', 403);
+            throw new ApiException(ps_t('Du kan bara registrera betalningar du själv är med i.'), 403);
         }
         if ($from === $to || !self::isMember($groupId, $from) || !self::isMember($groupId, $to)) {
-            throw new ApiException('Båda måste vara med i gruppen.', 422);
+            throw new ApiException(ps_t('Båda måste vara med i gruppen.'), 422);
         }
         if ($amount <= 0) {
-            throw new ApiException('Beloppet måste vara större än 0.', 422);
+            throw new ApiException(ps_t('Beloppet måste vara större än 0.'), 422);
         }
         $method = $method === 'other' ? 'other' : 'swish';
         $note = mb_substr(trim($note), 0, 255) ?: null;
@@ -279,11 +279,11 @@ final class Groups
         $group = self::requireMember($groupId, $identity);
         $rows = self::query('SELECT id, from_user, to_user, amount, created_by FROM settlements WHERE group_id = ? AND id = ' . (int) $settlementId, $groupId);
         if (!$rows) {
-            throw new ApiException('Betalningen finns inte.', 404);
+            throw new ApiException(ps_t('Betalningen finns inte.'), 404);
         }
         $row = $rows[0];
         if ((int) $row['created_by'] !== $identity->id() && !self::canManage($group, $identity)) {
-            throw new ApiException('Bara den som registrerade betalningen kan ta bort den.', 403);
+            throw new ApiException(ps_t('Bara den som registrerade betalningen kan ta bort den.'), 403);
         }
         $stmt = splitDb()->prepare('DELETE FROM settlements WHERE id = ? AND group_id = ?');
         $stmt->bind_param('ii', $settlementId, $groupId);
@@ -309,7 +309,7 @@ final class Groups
         self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
         if (!$group || !self::isMember($groupId, $identity->id())) {
-            throw new ApiException('Gruppen finns inte, eller så är du inte med i den.', 404);
+            throw new ApiException(ps_t('Gruppen finns inte, eller så är du inte med i den.'), 404);
         }
         return $group;
     }
@@ -319,10 +319,10 @@ final class Groups
         self::syncLinkedForUser($identity->id());
         $group = self::row($groupId);
         if (!$group || (!self::isMember($groupId, $identity->id()) && !PlatformGroups::can($identity->id(), 'split.group.moderate'))) {
-            throw new ApiException('Gruppen finns inte.', 404);
+            throw new ApiException(ps_t('Gruppen finns inte.'), 404);
         }
         if (!self::canManage($group, $identity)) {
-            throw new ApiException('Bara den som skapade gruppen kan göra det.', 403);
+            throw new ApiException(ps_t('Bara den som skapade gruppen kan göra det.'), 403);
         }
         return $group;
     }
@@ -331,10 +331,10 @@ final class Groups
     {
         $rows = self::query('SELECT id, title, amount, paid_by, created_by FROM expenses WHERE group_id = ? AND id = ' . (int) $expenseId, $groupId);
         if (!$rows) {
-            throw new ApiException('Utgiften finns inte.', 404);
+            throw new ApiException(ps_t('Utgiften finns inte.'), 404);
         }
         if (!self::canEditExpense($group, $rows[0], $identity)) {
-            throw new ApiException('Bara den som lade till eller betalade utgiften kan ändra den.', 403);
+            throw new ApiException(ps_t('Bara den som lade till eller betalade utgiften kan ändra den.'), 403);
         }
         return $rows[0];
     }
@@ -398,7 +398,7 @@ final class Groups
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn ($id) => $id > 0)));
         foreach ($ids as $id) {
             if (!People::exists($id)) {
-                throw new ApiException('En av personerna finns inte.', 422);
+                throw new ApiException(ps_t('En av personerna finns inte.'), 422);
             }
         }
         return $ids;
@@ -408,7 +408,7 @@ final class Groups
     {
         $name = trim(preg_replace('/\s+/u', ' ', $name) ?? '');
         if ($name === '' || mb_strlen($name) > 150) {
-            throw new ApiException('Ge gruppen ett namn (högst 150 tecken).', 422);
+            throw new ApiException(ps_t('Ge gruppen ett namn (högst 150 tecken).'), 422);
         }
         return $name;
     }

@@ -16,7 +16,7 @@
             body: data ? JSON.stringify(data) : undefined
         }).then(function (response) {
             return response.json().catch(function () { return {}; }).then(function (body) {
-                if (!response.ok || body.ok === false) throw new Error(body.message || 'Något gick fel. Försök igen.');
+                if (!response.ok || body.ok === false) throw new Error(body.message || psT('Något gick fel. Försök igen.'));
                 return body;
             });
         });

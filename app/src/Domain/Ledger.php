@@ -21,7 +21,7 @@ final class Ledger
         $people = array_values(array_unique(array_map('intval', $people)));
         sort($people);
         if (!$people) {
-            throw new ApiException('Välj minst en person som delar på kostnaden.', 422);
+            throw new ApiException(ps_t('Välj minst en person som delar på kostnaden.'), 422);
         }
         if ($mode === 'equal') {
             return self::spread($amount, array_fill_keys($people, 1));
@@ -31,12 +31,12 @@ final class Ledger
             foreach ($people as $id) {
                 $value = (int) ($inputs[$id] ?? 0);
                 if ($value <= 0) {
-                    throw new ApiException('Varje person behöver ett belopp större än 0.', 422);
+                    throw new ApiException(ps_t('Varje person behöver ett belopp större än 0.'), 422);
                 }
                 $raw[$id] = $value;
             }
             if (array_sum($raw) !== $amount) {
-                throw new ApiException('Beloppen måste bli ' . money($amount) . ' tillsammans (nu ' . money(array_sum($raw)) . ').', 422);
+                throw new ApiException(ps_t('Beloppen måste bli ') . money($amount) . ' tillsammans (nu ' . money(array_sum($raw)) . ').', 422);
             }
             return $raw;
         }
@@ -54,7 +54,7 @@ final class Ledger
             }
             return self::spread($amount, $raw);
         }
-        throw new ApiException('Okänt sätt att dela.', 422);
+        throw new ApiException(ps_t('Okänt sätt att dela.'), 422);
     }
 
     /** Splits $amount by weight; leftover öre go to the largest remainders, so the sum is exact. */
@@ -137,7 +137,7 @@ final class Ledger
         $text = str_replace([' ', "\u{a0}", 'kr'], '', trim((string) $value));
         $text = str_replace(',', '.', $text);
         if (!preg_match('/^\d{1,7}(\.\d{1,2})?$/', $text)) {
-            throw new ApiException('Skriv ett belopp, till exempel 249,50.', 422);
+            throw new ApiException(ps_t('Skriv ett belopp, till exempel 249,50.'), 422);
         }
         return (int) round(((float) $text) * 100);
     }

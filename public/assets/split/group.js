@@ -100,7 +100,7 @@
 
     function openEditor(expense) {
         editing = expense ? expense.id : null;
-        document.getElementById('expense-title').textContent = expense ? 'Ändra utgift' : 'Ny utgift';
+        document.getElementById('expense-title').textContent = expense ? psT('Ändra utgift') : psT('Ny utgift');
         form.title.value = expense ? expense.title : '';
         form.amount.value = expense ? (expense.amount / 100).toFixed(2).replace('.', ',').replace(/,00$/, '') : '';
         form.spent_on.value = expense ? expense.spent_on : new Date().toISOString().slice(0, 10);
@@ -131,10 +131,10 @@
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         var outcome = shares();
-        if (!form.title.value.trim()) { Split.toast('Skriv vad det gällde.', 'error'); form.title.focus(); return; }
-        if (isNaN(outcome.amount) || outcome.amount <= 0) { Split.toast('Skriv ett belopp, till exempel 249,50.', 'error'); form.amount.focus(); return; }
-        if (!Object.keys(outcome.shares).length) { Split.toast('Välj minst en person som delar på kostnaden.', 'error'); return; }
-        if (!outcome.ok) { Split.toast(sumNode.textContent || 'Fördelningen stämmer inte.', 'error'); return; }
+        if (!form.title.value.trim()) { Split.toast(psT('Skriv vad det gällde.'), 'error'); form.title.focus(); return; }
+        if (isNaN(outcome.amount) || outcome.amount <= 0) { Split.toast(psT('Skriv ett belopp, till exempel 249,50.'), 'error'); form.amount.focus(); return; }
+        if (!Object.keys(outcome.shares).length) { Split.toast(psT('Välj minst en person som delar på kostnaden.'), 'error'); return; }
+        if (!outcome.ok) { Split.toast(sumNode.textContent || psT('Fördelningen stämmer inte.'), 'error'); return; }
         var people = Object.keys(outcome.shares).map(Number);
         var inputs = {};
         rows.forEach(function (row) { if (row.querySelector('input[type=checkbox]').checked) inputs[row.dataset.person] = row.querySelector('.split-share__input').value; });
@@ -143,12 +143,12 @@
         Split.api(base + '/expenses' + (editing ? '/' + editing : ''), {
             title: form.title.value, amount: form.amount.value, spent_on: form.spent_on.value, paid_by: Number(form.paid_by.value),
             notes: form.notes.value, mode: mode, people: people, inputs: mode === 'equal' ? {} : inputs
-        }).then(function () { done(editing ? 'Utgiften är ändrad.' : 'Utgiften är tillagd.'); })
+        }).then(function () { done(editing ? psT('Utgiften är ändrad.') : psT('Utgiften är tillagd.')); })
           .catch(function (error) { button.disabled = false; fail(error); });
     });
 
     deleteButton.addEventListener('click', function () {
-        if (!editing || !window.confirm('Ta bort utgiften?')) return;
+        if (!editing || !window.confirm(psT('Ta bort utgiften?'))) return;
         Split.api(base + '/expenses/' + editing, null, 'DELETE').then(function () { done('Utgiften är borttagen.'); }).catch(fail);
     });
 
@@ -158,7 +158,7 @@
         var body = document.querySelector('[data-expense-view]');
         body.innerHTML = '';
         var lead = document.createElement('p');
-        lead.textContent = (byId[expense.paid_by] ? byId[expense.paid_by].name : 'Någon') + ' betalade ' + Split.money(expense.amount) + ' den ' + expense.spent_on + '.';
+        lead.textContent = psT('{name} betalade {amount} den {date}.', { name: byId[expense.paid_by] ? byId[expense.paid_by].name : psT('Någon'), amount: Split.money(expense.amount), date: expense.spent_on });
         body.appendChild(lead);
         var list = document.createElement('ul');
         list.className = 'ps-list';
@@ -166,7 +166,7 @@
             var row = document.createElement('li');
             row.className = 'ps-row';
             row.innerHTML = '<div class="ps-row__body"><div class="ps-row__title"></div></div><strong></strong>';
-            row.querySelector('.ps-row__title').textContent = byId[id] ? byId[id].name : 'Har lämnat gruppen';
+            row.querySelector('.ps-row__title').textContent = byId[id] ? byId[id].name : psT('Har lämnat gruppen');
             row.querySelector('strong').textContent = Split.money(expense.shares[id]);
             list.appendChild(row);
         });
@@ -179,7 +179,7 @@
         }
         var hint = document.createElement('p');
         hint.className = 'ps-help';
-        hint.textContent = 'Den som lade till eller betalade utgiften kan ändra den.';
+        hint.textContent = psT('Den som lade till eller betalade utgiften kan ändra den.');
         body.appendChild(hint);
         Split.openModal('expense-view');
     }
@@ -224,20 +224,20 @@
             return;
         }
         var removePayment = target.closest('[data-payment-delete]');
-        if (removePayment && window.confirm('Ta bort betalningen?')) {
+        if (removePayment && window.confirm(psT('Ta bort betalningen?'))) {
             Split.api(base + '/payments/' + removePayment.dataset.paymentDelete, null, 'DELETE').then(function () { done('Betalningen är borttagen.'); }).catch(fail);
             return;
         }
         var removeMember = target.closest('[data-member-remove]');
-        if (removeMember && window.confirm('Ta bort personen från gruppen?')) {
+        if (removeMember && window.confirm(psT('Ta bort personen från gruppen?'))) {
             Split.api(base + '/members/' + removeMember.dataset.memberRemove, null, 'DELETE').then(function () { done('Personen är borttagen.'); }).catch(fail);
             return;
         }
-        if (target.closest('[data-group-leave]') && window.confirm('Lämna gruppen? Du måste vara kvitt först.')) {
+        if (target.closest('[data-group-leave]') && window.confirm(psT('Lämna gruppen? Du måste vara kvitt först.'))) {
             Split.api(base + '/members/' + data.me, null, 'DELETE').then(function (body) { window.location.href = body.redirect || '/'; }).catch(fail);
             return;
         }
-        if (target.closest('[data-group-delete]') && window.confirm('Ta bort gruppen med alla utgifter och betalningar? Det går inte att ångra.')) {
+        if (target.closest('[data-group-delete]') && window.confirm(psT('Ta bort gruppen med alla utgifter och betalningar? Det går inte att ångra.'))) {
             Split.api(base, null, 'DELETE').then(function (body) { window.location.href = body.redirect || '/'; }).catch(fail);
         }
     });
@@ -247,7 +247,7 @@
         addMembers.addEventListener('submit', function (event) {
             event.preventDefault();
             var ids = Array.prototype.map.call(addMembers.querySelectorAll('input[name=members]:checked'), function (box) { return Number(box.value); });
-            if (!ids.length) { Split.toast('Välj minst en person.', 'error'); return; }
+            if (!ids.length) { Split.toast(psT('Välj minst en person.'), 'error'); return; }
             Split.api(base + '/members', { members: ids }).then(function () { done('Personerna är tillagda.'); }).catch(fail);
         });
     }

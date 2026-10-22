@@ -16,7 +16,7 @@ final class PlatformGroups
         $file = dirname(__DIR__, 3) . '/config/widgets.php';
         $secret = is_file($file) ? (string) ((require $file)['secret'] ?? '') : '';
         if ($secret === '') {
-            throw new ApiException('PlainShow groups are unavailable.', 503);
+            throw new ApiException(ps_t('PlainShow groups are unavailable.'), 503);
         }
         $url = 'https://plainshow.se/api/core/v1/groups/for-user?'.http_build_query(
             ['extension' => 'split'] + Widgets::sign($userId, 'groups', $secret),
@@ -33,10 +33,10 @@ final class PlatformGroups
         curl_close($connection);
         $decoded = is_string($body) ? json_decode($body, true) : null;
         if ($status === 403) {
-            throw new ApiException('Du har inte tillgång till Split.', 403);
+            throw new ApiException(ps_t('Du har inte tillgång till Split.'), 403);
         }
         if ($status !== 200 || !is_array($decoded) || !is_array($decoded['groups'] ?? null) || !is_array($decoded['people'] ?? null) || !is_array($decoded['viewer'] ?? null)) {
-            throw new ApiException('PlainShow groups could not be checked.', 503);
+            throw new ApiException(ps_t('PlainShow groups could not be checked.'), 503);
         }
 
         $decoded['groups'] = array_column($decoded['groups'], null, 'id');

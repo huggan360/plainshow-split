@@ -125,8 +125,8 @@ $router->add('GET', '/widgets/balances', function () {
     return [
         'type' => 'metrics',
         'metrics' => [
-            ['label' => 'Du får tillbaka', 'value' => money($owed), 'tone' => $owed > 0 ? 'plus' : null],
-            ['label' => 'Du är skyldig', 'value' => money($owe), 'tone' => $owe > 0 ? 'minus' : null],
+            ['label' => ps_t('Du får tillbaka'), 'value' => money($owed), 'tone' => $owed > 0 ? 'plus' : null],
+            ['label' => ps_t('Du är skyldig'), 'value' => money($owe), 'tone' => $owe > 0 ? 'minus' : null],
         ],
         'items' => array_map(fn ($g) => [
             'title' => $g['name'],
@@ -136,7 +136,7 @@ $router->add('GET', '/widgets/balances', function () {
             'badge' => $g['balance'] === 0 ? 'Kvitt' : money((int) $g['balance'], true),
             'tone' => $g['balance'] > 0 ? 'plus' : ($g['balance'] < 0 ? 'minus' : null),
         ], array_slice($groups, 0, 5)),
-        'empty' => 'Du är inte med i någon grupp ännu.',
-        'more' => ['label' => 'Öppna Split', 'url' => 'https://split.plainshow.se/'],
+        'empty' => ps_t('Du är inte med i någon grupp ännu.'),
+        'more' => ['label' => ps_t('Öppna Split'), 'url' => 'https://split.plainshow.se/'],
     ];
 }, null);

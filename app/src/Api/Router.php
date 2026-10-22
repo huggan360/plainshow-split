@@ -47,33 +47,33 @@ final class Router
                 self::send($error->status, ['ok' => false, 'message' => $error->getMessage()]);
             } catch (Throwable $error) {
                 error_log('Split API ' . $method . ' ' . $path . ': ' . $error->getMessage() . ' at ' . $error->getFile() . ':' . $error->getLine());
-                self::send(500, ['ok' => false, 'message' => 'Något gick fel på servern. Försök igen.']);
+                self::send(500, ['ok' => false, 'message' => ps_t('Något gick fel på servern. Försök igen.')]);
             }
         }
         if ($allowed) {
             header('Allow: ' . implode(', ', array_unique($allowed)));
-            self::send(405, ['ok' => false, 'message' => 'Metoden stöds inte.']);
+            self::send(405, ['ok' => false, 'message' => ps_t('Metoden stöds inte.')]);
         }
-        self::send(404, ['ok' => false, 'message' => 'Hittades inte.']);
+        self::send(404, ['ok' => false, 'message' => ps_t('Hittades inte.')]);
     }
 
     private function authorize(string $method, ?string $capability): void
     {
         if ($method !== 'GET' && !csrf_valid()) {
-            throw new ApiException('Sidan har varit öppen länge. Ladda om och försök igen.', 419);
+            throw new ApiException(ps_t('Sidan har varit öppen länge. Ladda om och försök igen.'), 419);
         }
         if ($capability === null) {
             return;
         }
         $identity = current_identity();
         if ($identity === null) {
-            throw new ApiException('Logga in för att fortsätta.', 401);
+            throw new ApiException(ps_t('Logga in för att fortsätta.'), 401);
         }
         if (!$identity->hasService('split')) {
-            throw new ApiException('Du har inte tillgång till Split.', 403);
+            throw new ApiException(ps_t('Du har inte tillgång till Split.'), 403);
         }
         if ($capability !== 'user' && !split_can($capability)) {
-            throw new ApiException('Du har inte behörighet att göra det.', 403);
+            throw new ApiException(ps_t('Du har inte behörighet att göra det.'), 403);
         }
     }
 
