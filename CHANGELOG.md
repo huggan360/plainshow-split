@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.3
+
+- Page headings sit in a frame of their own; the group list's has the orange ring (kit 1.11).
+
 ## v1.6.2
 
 - Background: large soft orange blobs that fade in, drift and fade out, lighting only the glyphs (kit 1.10).

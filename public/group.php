@@ -46,7 +46,7 @@ $data = [
 split_layout_start($group['name'], ['group' => (int) $group['id']]);
 ?>
 <a class="split-back" href="/"><i class="bx bx-left-arrow-alt" aria-hidden="true"></i><?= ps_h('Grupper') ?></a>
-<header class="split-head split-head--group">
+<header class="split-head split-head--group ps-page-head">
     <div>
         <h1 class="ps-page-head__title"><?= e($group['name']) ?></h1>
         <div class="split-faces split-faces--lg"><?php foreach ($members as $person) { echo avatar($person, 'sm'); } ?></div>

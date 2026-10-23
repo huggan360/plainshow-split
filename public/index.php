@@ -22,7 +22,7 @@ try {
 
 split_layout_start('Grupper');
 ?>
-<div class="split-head">
+<div class="split-head ps-page-head ps-page-head--gradient">
     <div>
         <h1 class="ps-page-head__title"><?= ps_h('Split') ?></h1>
         <p class="ps-page-head__text"><?= ps_h('Dela kostnader i grupper och gör upp med Swish.') ?></p>
