@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.1
+
+- New background: embers from orange to yellow that move away from the pointer, so you can chase them (kit 1.9).
+
 ## v1.6.0
 
 - Svenska, English och Nederlands: webbläsarens språk som standard, eller valt i kontomenyn.
