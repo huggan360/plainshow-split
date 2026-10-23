@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.4
+
+- Page headings are a real frame with its inner panel; the main page's heading has the orange ring around the panel, as on widgets (kit 1.11.1).
+
 ## v1.6.3
 
 - Page headings sit in a frame of their own; the group list's has the orange ring (kit 1.11).
