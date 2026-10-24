@@ -14,12 +14,17 @@ SOURCE=$(cd "$(dirname "$0")/.." && pwd)
 KEEP=3
 say() { printf '\033[1m%s\033[0m\n' "$*"; }
 
+# Facts about this server from the platform file (/etc/plainshow/platform.json).
+platform() { php -r '$d = json_decode((string) @file_get_contents("/etc/plainshow/platform.json"), true); echo $d["system"][$argv[1]] ?? "";' "$1"; }
+PHP_FPM=$(platform php_fpm_service); PHP_FPM=${PHP_FPM:-php8.5-fpm}
+WEB_USER=$(platform web_user); WEB_USER=${WEB_USER:-www-data}
+
 if [ "${1:-}" = "--rollback" ]; then
     current=$(readlink "$BASE/current")
     previous=$(ls -1dt "$BASE"/releases/* | grep -vx "$current" | head -1)
     [ -n "$previous" ] || { echo "No earlier release to roll back to." >&2; exit 1; }
     ln -sfn "$previous" "$BASE/current.new" && mv -Tf "$BASE/current.new" "$BASE/current"
-    sudo -n systemctl reload php8.5-fpm
+    sudo -n systemctl reload "$PHP_FPM"
     say "Rolled back to $(basename "$previous")"
     exit 0
 fi
@@ -54,16 +59,16 @@ php app/console.php migrate
 ME=$(id -un)
 sudo -n chown -R "$ME:plainshow-split" "$RELEASE"
 sudo -n chmod -R g+rX,o-rwx "$RELEASE"
-sudo -n setfacl -R -m u:www-data:rX "$RELEASE"
+sudo -n setfacl -R -m "u:$WEB_USER:rX" "$RELEASE"
 sudo -n setfacl -m u:plainshow-split:x /srv/plainshow
-sudo -n setfacl -m u:www-data:x "$BASE" "$BASE/releases"
+sudo -n setfacl -m "u:$WEB_USER:x" "$BASE" "$BASE/releases"
 sudo -n find "$BASE/shared/storage" -type d -exec chmod 2770 {} +
 sudo -n find "$BASE/shared/storage" -type f -exec chmod 0660 {} +
 sudo -n chmod 0640 "$BASE"/shared/config/*.php
 
 ln -sfn "$RELEASE" "$BASE/current.new"
 mv -Tf "$BASE/current.new" "$BASE/current"
-sudo -n systemctl reload php8.5-fpm || echo "Reload php8.5-fpm to finish switching." >&2
+sudo -n systemctl reload "$PHP_FPM" || echo "Reload $PHP_FPM to finish switching." >&2
 say "split is now $NAME"
 
 ls -1dt "$BASE"/releases/* | tail -n +$((KEEP + 1)) | xargs -r rm -rf

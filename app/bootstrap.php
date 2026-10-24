@@ -20,6 +20,16 @@ if (!function_exists('ps_t')) {
     }
 }
 
+if (!function_exists('ps_url')) {
+    /** An address in a PlainShow app (kit Platform), or '' when that app is not installed here. */
+    function ps_url(string $app, string $path = ''): string
+    {
+        $base = \PlainShow\Kit\Platform::url($app);
+
+        return $base === null ? '' : $base . $path;
+    }
+}
+
 date_default_timezone_set('Europe/Stockholm');
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');

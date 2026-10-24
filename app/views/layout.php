@@ -60,7 +60,7 @@ function split_layout_start(string $title, array $options = []): void
                     <i class="bx bx-chevron-up ps-me__chevron" aria-hidden="true"></i>
                 </button>
                 <div class="ps-dropdown__menu ps-dropdown__menu--up" data-ps-dropdown-menu hidden>
-                    <a class="ps-dropdown__item" href="https://plainshow.se/account"><i class="bx bx-user"></i><?= ps_h('Konto') ?></a>
+                    <a class="ps-dropdown__item" href="<?= e(ps_url('core', '/account')) ?>"><i class="bx bx-user"></i><?= ps_h('Konto') ?></a>
                     <?= \PlainShow\Kit\Lang::menuSwitch() ?>
                     <button type="button" class="ps-dropdown__item" data-ps-theme-toggle><i class="bx bx-adjust"></i><span data-ps-theme-label><?= ps_h('Ljust tema') ?></span></button>
                     <div class="ps-dropdown__sep"></div>
@@ -80,12 +80,12 @@ function split_layout_start(string $title, array $options = []): void
                 <button type="button" class="ps-btn ps-btn--ghost ps-btn--icon ps-switcher__trigger" data-ps-dropdown-trigger aria-expanded="false" aria-label="<?= ps_h('Byt tjänst') ?>"><i class="bx bx-grid"></i></button>
                 <div class="ps-switcher__panel" data-ps-dropdown-menu hidden>
                     <div class="ps-switcher__grid">
-                        <a class="ps-switcher__app" href="https://plainshow.se"><i class="bx bx-grid-alt"></i><?= ps_h('Dashboard') ?></a>
-                        <?php if (split_has_service('blog')): ?><a class="ps-switcher__app" href="https://blog.plainshow.se"><i class="bx bx-news"></i><?= ps_h('Blog') ?></a><?php endif; ?>
+                        <a class="ps-switcher__app" href="<?= e(ps_url('core')) ?>"><i class="bx bx-grid-alt"></i><?= ps_h('Dashboard') ?></a>
+                        <?php if (split_has_service('blog') && ps_url('blog') !== ''): ?><a class="ps-switcher__app" href="<?= e(ps_url('blog')) ?>"><i class="bx bx-news"></i><?= ps_h('Blog') ?></a><?php endif; ?>
                         <a class="ps-switcher__app is-current" href="/"><i class="bx bx-wallet"></i><?= ps_h('Split') ?></a>
-                        <?php if (split_has_service('latex')): ?><a class="ps-switcher__app" href="https://latex.plainshow.se"><i class="bx bx-code-curly"></i><?= ps_h('LaTeX') ?></a><?php endif; ?>
-                        <?php if (split_has_service('web')): ?><a class="ps-switcher__app" href="https://web.plainshow.se"><i class="bx bx-server"></i><?= ps_h('Web') ?></a><?php endif; ?>
-                        <?php if (split_has_service('cloud')): ?><a class="ps-switcher__app" href="https://cloud.plainshow.se"><i class="bx bx-cloud"></i><?= ps_h('Cloud') ?></a><?php endif; ?>
+                        <?php if (split_has_service('latex') && ps_url('latex') !== ''): ?><a class="ps-switcher__app" href="<?= e(ps_url('latex')) ?>"><i class="bx bx-code-curly"></i><?= ps_h('LaTeX') ?></a><?php endif; ?>
+                        <?php if (split_has_service('web') && ps_url('web') !== ''): ?><a class="ps-switcher__app" href="<?= e(ps_url('web')) ?>"><i class="bx bx-server"></i><?= ps_h('Web') ?></a><?php endif; ?>
+                        <?php if (split_has_service('cloud') && ps_url('cloud') !== ''): ?><a class="ps-switcher__app" href="<?= e(ps_url('cloud')) ?>"><i class="bx bx-cloud"></i><?= ps_h('Cloud') ?></a><?php endif; ?>
                     </div>
                 </div>
             </div>

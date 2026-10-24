@@ -34,7 +34,7 @@ split_layout_start('Grupper');
 <div class="ps-alert split-phone">
     <i class="bx bx-mobile-alt" aria-hidden="true"></i>
     <div><strong><?= ps_h('Lägg till ditt telefonnummer') ?></strong><br><?= ps_h('Då kan de andra betala dig med Swish direkt från Split.') ?></div>
-    <a class="ps-btn ps-btn--sm" href="https://plainshow.se/account"><?= ps_h('Till kontot') ?><i class="bx bx-right-top-arrow-circle"></i></a>
+    <a class="ps-btn ps-btn--sm" href="<?= e(ps_url('core', '/account')) ?>"><?= ps_h('Till kontot') ?><i class="bx bx-right-top-arrow-circle"></i></a>
 </div>
 <?php endif; ?>
 

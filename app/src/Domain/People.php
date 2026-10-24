@@ -81,7 +81,7 @@ final class People
             'name' => $name,
             'first' => $first ?: $name,
             'initials' => $initials ?: '?',
-            'avatar' => $row['avatar_path'] ? 'https://plainshow.se/avatars/' . (int) $row['id'] . '?v=' . substr(md5((string) $row['updated_at']), 0, 8) : null,
+            'avatar' => $row['avatar_path'] ? ps_url('core', '/avatars/' . (int) $row['id']) . '?v=' . substr(md5((string) $row['updated_at']), 0, 8) : null,
             'phone' => self::swishNumber($row['phone']),
         ];
     }

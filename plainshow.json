@@ -4,9 +4,9 @@
     "description": "Share costs in groups and settle up with Swish.",
     "icon": "bx-wallet",
     "version": "1.4.0",
-    "url": "https://split.plainshow.se",
-    "api": "https://split.plainshow.se/api/v1",
-    "health": "https://split.plainshow.se/api/v1/health",
+    "url": "{url}",
+    "api": "{url}/api/v1",
+    "health": "{url}/api/v1/health",
     "update": {
         "repository": "https://github.com/huggan360/plainshow-split.git",
         "shared": ["config/plainshow.php", "config/database.php", "storage"],

@@ -131,12 +131,12 @@ $router->add('GET', '/widgets/balances', function () {
         'items' => array_map(fn ($g) => [
             'title' => $g['name'],
             'meta' => (int) $g['people'] . ' personer',
-            'url' => 'https://split.plainshow.se/group?id=' . (int) $g['id'],
+            'url' => ps_url('split', '/group?id=' . (int) $g['id']),
             'icon' => 'bx-wallet',
             'badge' => $g['balance'] === 0 ? 'Kvitt' : money((int) $g['balance'], true),
             'tone' => $g['balance'] > 0 ? 'plus' : ($g['balance'] < 0 ? 'minus' : null),
         ], array_slice($groups, 0, 5)),
         'empty' => ps_t('Du är inte med i någon grupp ännu.'),
-        'more' => ['label' => ps_t('Öppna Split'), 'url' => 'https://split.plainshow.se/'],
+        'more' => ['label' => ps_t('Öppna Split'), 'url' => ps_url('split', '/')],
     ];
 }, null);

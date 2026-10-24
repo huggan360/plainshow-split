@@ -18,7 +18,10 @@ final class PlatformGroups
         if ($secret === '') {
             throw new ApiException(ps_t('PlainShow groups are unavailable.'), 503);
         }
-        $url = 'https://plainshow.se/api/core/v1/groups/for-user?'.http_build_query(
+        // Core runs on this server: the request goes straight to it.
+        $core = \PlainShow\Kit\Platform::require('core');
+        $host = (string) parse_url($core, PHP_URL_HOST);
+        $url = $core.'/api/core/v1/groups/for-user?'.http_build_query(
             ['extension' => 'split'] + Widgets::sign($userId, 'groups', $secret),
         );
         $connection = curl_init($url);
@@ -26,7 +29,7 @@ final class PlatformGroups
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 2,
             CURLOPT_TIMEOUT => 5,
-            CURLOPT_RESOLVE => ['plainshow.se:443:127.0.0.1'],
+            CURLOPT_RESOLVE => ["$host:443:127.0.0.1"],
         ]);
         $body = curl_exec($connection);
         $status = curl_getinfo($connection, CURLINFO_HTTP_CODE);

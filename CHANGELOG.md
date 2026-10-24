@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.7.0
+
+- Every address comes from the platform file (kit 1.12), so Split runs on any domain; notices go to the blog only when it is installed.
+- The notify secret is no longer in the repository (`config/notify.example.php` shows the format); deploy uses this server's PHP-FPM and web user.
+
 ## v1.6.4
 
 - Page headings are a real frame with its inner panel; the main page's heading has the orange ring around the panel, as on widgets (kit 1.11.1).
