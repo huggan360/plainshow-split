@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.8.1
+
+- The backdrop's light is as gentle in every theme colour as in orange (kit 1.13.1).
+
 ## v1.8.0
 
 - Split follows the theme colour chosen in the dashboard (kit 1.13), with Bree Serif titles and dark grey text in the light theme.
