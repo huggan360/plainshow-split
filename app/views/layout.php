@@ -7,7 +7,7 @@ function split_layout_start(string $title, array $options = []): void
     $me = $identity ? Split\Domain\People::one($identity->id()) : null;
     ?>
 <!doctype html>
-<html lang="<?= e(\PlainShow\Kit\Lang::current()) ?>" data-theme="dark">
+<html lang="<?= e(\PlainShow\Kit\Lang::current()) ?>" data-theme="dark"<?= \PlainShow\Kit\Theme::attributes() ?>>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
